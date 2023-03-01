@@ -380,10 +380,13 @@ class ExtractItems:
         :param filing_metadata: a pandas series containing all filings metadata
         """
 
-        absolute_10k_filename = os.path.join(self.raw_files_folder, filing_metadata['filename'])
-
-        with open(absolute_10k_filename, 'r', errors='backslashreplace') as file:
-            content = file.read()
+        absolute_10k_filename = os.path.join(self.raw_files_folder, filing_metadata["Filename_new"])
+        try:
+            with open(absolute_10k_filename, 'r', errors='backslashreplace') as file:
+                content = file.read()
+        except:
+            content = ""
+            LOGGER.info(f'\nFile not found for {filing_metadata["Filename_new"]}')
 
         # Remove all embedded pdfs that might be seen in few old 10-K txt annual reports
         content = re.sub(r'<PDF>.*?</PDF>', '', content, flags=regex_flags)
@@ -405,15 +408,15 @@ class ExtractItems:
 
         if not found_10k:
             if documents:
-                LOGGER.info(f'\nCould not find document type 10K for {filing_metadata["filename"]}')
+                LOGGER.info(f'\nCould not find document type 10K for {filing_metadata["Filename_new"]}')
             doc_10k = BeautifulSoup(content, 'lxml')
             is_html = (True if doc_10k.find('td') else False) and (True if doc_10k.find('tr') else False)
             if not is_html:
                 doc_10k = content
 
         # if not is_html and not documents:
-        if filing_metadata['filename'].endswith('txt') and not documents:
-            LOGGER.info(f'\nNo <DOCUMENT> tag for {filing_metadata["filename"]}')
+        if filing_metadata["Filename_new"].endswith('txt') and not documents:
+            LOGGER.info(f'\nNo <DOCUMENT> tag for {filing_metadata["Filename_new"]}')
 
         # For non html clean all table items
         if self.remove_tables:
@@ -421,18 +424,18 @@ class ExtractItems:
 
         json_content = {
             'cik': filing_metadata['CIK'],
-            'company': filing_metadata['Company'],
-            'filing_type': filing_metadata['Type'],
-            'filing_date': filing_metadata['Date'],
-            'period_of_report': filing_metadata['Period of Report'],
-            'sic': filing_metadata['SIC'],
-            'state_of_inc': filing_metadata['State of Inc'],
-            'state_location': filing_metadata['State location'],
-            'fiscal_year_end': filing_metadata['Fiscal Year End'],
-            'filing_html_index': filing_metadata['html_index'],
-            'htm_filing_link': filing_metadata['htm_file_link'],
-            'complete_text_filing_link': filing_metadata['complete_text_file_link'],
-            'filename': filing_metadata['filename']
+            'company': filing_metadata['Company Name'],
+            'filing_type': filing_metadata['Form Type'],
+            'filing_date': filing_metadata['Date Filed'],
+            # 'period_of_report': filing_metadata['Period of Report'],
+            # 'sic': filing_metadata['SIC'],
+            # 'state_of_inc': filing_metadata['State of Inc'],
+            # 'state_location': filing_metadata['State location'],
+            # 'fiscal_year_end': filing_metadata['Fiscal Year End'],
+            # 'filing_html_index': filing_metadata['html_index'],
+            # 'htm_filing_link': filing_metadata['htm_file_link'],
+            # 'complete_text_filing_link': filing_metadata['complete_text_file_link'],
+            'Filename_new': filing_metadata["Filename_new"]
         }
         for item_index in self.items_to_extract:
             json_content[f'item_{item_index}'] = ''
@@ -459,7 +462,7 @@ class ExtractItems:
         return json_content
 
     def process_filing(self, filing_metadata):
-        json_filename = f'{filing_metadata["filename"].split(".")[0]}.json'
+        json_filename = f'{filing_metadata["Filename_txt"].split(".")[0]}.json'
         absolute_json_filename = os.path.join(self.extracted_files_folder, json_filename)
         if self.skip_extracted_filings and os.path.exists(absolute_json_filename):
             return 0
@@ -479,7 +482,7 @@ def main():
     """
 
     with open('config.json') as fin:
-        config = json.load(fin)['extract_items']
+        config = json.load(fin)['extract_items_10Q']
 
     filings_metadata_filepath = os.path.join(DATASET_DIR, config['filings_metadata_file'])
     if os.path.exists(filings_metadata_filepath):
@@ -512,7 +515,7 @@ def main():
 
     list_of_series = list(zip(*filings_metadata_df.iterrows()))[1]
 
-    with ProcessPool(processes=1) as pool:
+    with ProcessPool(processes=56) as pool:
         processed = list(tqdm(
             pool.imap(extraction.process_filing, list_of_series),
             total=len(list_of_series),

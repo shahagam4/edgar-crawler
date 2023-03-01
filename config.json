@@ -11,13 +11,23 @@
 		"filings_metadata_file": "FILINGS_METADATA.csv",
 		"skip_present_indices": true
 	},
-	"extract_items": {
-		"raw_filings_folder": "RAW_FILINGS",
-		"extracted_filings_folder": "EXTRACTED_FILINGS",
-		"filings_metadata_file": "FILINGS_METADATA.csv",
+	"extract_items_10K": {
+		"raw_filings_folder": "/mnt/nas_fintech_11/SEC/",
+		"extracted_filings_folder": "/mnt/nas_fintech_11/SEC/edgar_json_clean/10K/",
+		"filings_metadata_file": "/mnt/nas_fintech_11/SEC/data/masters/FILINGS_METADATA_10K.csv",
 		"items_to_extract": [
 			"1", "1A", "1B", "2", "3", "4", "5", "6", "7", "7A",
 			"8", "9", "9A", "9B", "10", "11", "12", "13", "14", "15"
+		],
+		"remove_tables": true,
+		"skip_extracted_filings": true
+	},
+	"extract_items_10Q": {
+		"raw_filings_folder": "/mnt/nas_fintech_11/SEC/",
+		"extracted_filings_folder": "/mnt/nas_fintech_11/SEC/edgar_json_clean/10Q/",
+		"filings_metadata_file": "/mnt/nas_fintech_11/SEC/data/masters/FILINGS_METADATA_10Q.csv",
+		"items_to_extract": [
+			"1", "2", "3", "4", "1A"
 		],
 		"remove_tables": true,
 		"skip_extracted_filings": true
